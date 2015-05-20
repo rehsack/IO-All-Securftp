@@ -48,7 +48,8 @@ sub open
     $self->is_open(1);
     my $mode = @_ ? shift : $self->mode ? $self->mode : '<';
     $self->mode($mode);
-    my $sftph = IO::All::Securftp::iowrap->new($self->name);
+    my $opts = @_ ? shift : {};
+    my $sftph = IO::All::Securftp::iowrap->new($self->name, $opts);
     if ($mode eq '<') {
 	$sftph->_fetch();
     }

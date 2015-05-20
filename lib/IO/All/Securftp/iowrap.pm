@@ -33,11 +33,13 @@ sub new
     my %obj;
 
     $obj{uri} = blessed $name ? $name : URI->new($name);
+    $obj{options} = \%options;
 
     defined $obj{uri}->userinfo and $options{user} //= $obj{uri}->userinfo;
     defined $obj{uri}->_port and $options{port} //= $obj{uri}->_port;
 
-    $obj{sftp} = Net::SFTP::Foreign->new($obj{uri}->host, %options);
+    my %new_opts = ( $options{new} ? ( %{$options{new}}) : () );
+    $obj{sftp} = Net::SFTP::Foreign->new($obj{uri}->host, %new_opts);
 
     bless \%obj, $class;
 }
@@ -46,7 +48,8 @@ sub _fetch
 {
     my $self = shift;
     my $fh;
-    $self->{_cnt} = $self->{sftp}->get_content($self->{uri}->path);
+    my %fetch_opts = ( $self->{options}->{get_content} ? ( %{$self->{options}->{get_content}}) : () );
+    $self->{_cnt} = $self->{sftp}->get_content($self->{uri}->path, %fetch_opts);
     CORE::open $fh, "<", \$self->{_cnt};
     $self->{content} = $fh;
 }
@@ -55,7 +58,8 @@ sub _preappend
 {
     my $self = shift;
     my $fh;
-    $self->{_cnt} = $self->{sftp}->get_content($self->{uri}->path);
+    my %fetch_opts = ( $self->{options}->{get_content} ? ( %{$self->{options}->{get_content}}) : () );
+    $self->{_cnt} = $self->{sftp}->get_content($self->{uri}->path, %fetch_opts);
     CORE::open $fh, ">>", \$self->{_cnt};
     $self->{dirty} = 1;
     $self->{content} = $fh;
@@ -95,7 +99,8 @@ sub print
 sub close
 {
     my $self = shift;
-    $self->{dirty} and $self->{sftp}->put_content($self->{_cnt}, $self->{uri}->path);
+    my %put_opts = ( $self->{options}->{put_content} ? ( %{$self->{options}->{put_content}}) : () );
+    $self->{dirty} and $self->{sftp}->put_content($self->{_cnt}, $self->{uri}->path, %put_opts);
     delete @$self{qw(dirty sftp _cnt uri content)};
     return;
 }
