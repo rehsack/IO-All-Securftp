@@ -21,14 +21,22 @@ $VERSION   = '0.001';
 
   use IO::All;
 
-  $content < io('remote@server:/path/to/file.ext');
-  io('remote@server:/path/to/file.ext') > io("$tmpdir/file.ext");
-
-  ...
+  $content < io('securftp://remote@server/path/to/file.ext');
+  io('Securftp://user@host/path/to/file.ext') > io("$tmpdir/file.ext");
+  
+  io('Securftp://user@host/path/to/file.ext')->print("Hello world: $msg\n");
+  my $content = io($self->{uri} . "/$filename")->open("<", { get_content => { conversion => 'unix2dos' } })->slurp();
 
 =head1 DESCRIPTION
 
 This module extends IO::All for dealing with secure ftp remotes.
+
+=head1 METHODS
+
+=head2 SecureFTP_init
+
+Called by uri handler of IO::All. The capability of user specified parameters
+are limited.
 
 =cut
 
@@ -40,7 +48,27 @@ sub SecureFTP_init
     $self->_init;
 }
 
+=head2 securftp
+
+Called by uri handler of IO::All. The capability of user specified parameters
+are limited.
+
+=cut
+
 sub securftp { my $self=shift; $self->SecureFTP_init(__PACKAGE__, @_) }
+
+=head2 open
+
+Called whenever a handle shall be opened for reading or writing. Can be
+triggered manually or automatically.
+
+  $io->open($mode, \%options?)
+
+As C<$mode> values are "<", ">" and ">>" supported.
+
+The C<%options> hash is passed to L<IO::All::Securftp::iowrap>.
+
+=cut
 
 sub open
 {

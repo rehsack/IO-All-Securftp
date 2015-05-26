@@ -2,11 +2,14 @@ package IO::All::Securftp::iowrap;
 
 use warnings;
 use strict;
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 =head1 NAME
 
-O::All::Securftp::iowrap - provides I/O wrapper for better integration of Net::SFTP::Foreign into IO::All
+IO::All::Securftp::iowrap - provides I/O wrapper for better integration of Net::SFTP::Foreign into IO::All
+
+=head1 DESCRIPTION
+
+IO::All::Securftp::iowrap is the handler for IO::All for opened sftp connections for reading and writing.
 
 =cut
 
@@ -17,11 +20,35 @@ use URI;
 
 use namespace::clean;
 
+our $VERSION = "0.001";
+
 {package # ...
  URI::securftp;
 
  use parent "URI::ssh";
 }
+
+=head1 METHODS
+
+=head2 new
+
+Extracts user/port from URI, if any - and passes parsed URI to C<< Net::SFTP::Foreign->new >> together with optional specified C<new> hash in C<%options>:
+
+  IO::All::Securftp::iowrap->new($self->name, {
+    new => {
+      timeout => ...,
+    },
+    get_content => {
+      conversion => ...,
+    },
+    put_content => {
+      atomic => 1,
+    }
+  });
+
+For details regarding the options to new, get_content and put_content see L<Net::SFTP::Foreign>.
+
+=cut
 
 sub new
 {
@@ -75,12 +102,24 @@ sub _preput
     $self->{content} = $fh;
 }
 
+=head2 getline
+
+Reads a single line from remote file
+
+=cut
+
 sub getline
 {
     my $self = shift;
     $self->{content} or $self->_fetch;
     $self->{content}->getline;
 }
+
+=head2 getlines
+
+Reads all lines from remote file
+
+=cut
 
 sub getlines
 {
@@ -89,12 +128,24 @@ sub getlines
     $self->{content}->getlines;
 }
 
+=head2 print
+
+Print given lines to remote file
+
+=cut
+
 sub print
 {
     my $self = shift;
     $self->{content} or $self->_fetch;
     $self->{content}->print(@_);
 }
+
+=head2 close
+
+Closes remote connection, flush buffers before when necessary
+
+=cut
 
 sub close
 {
@@ -104,6 +155,10 @@ sub close
     delete @$self{qw(dirty sftp _cnt uri content)};
     return;
 }
+
+=head2 DESTROY
+
+=cut
 
 sub DESTROY
 {

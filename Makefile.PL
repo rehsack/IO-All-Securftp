@@ -8,6 +8,9 @@ use ExtUtils::MakeMaker;
 my %RUN_DEPS = (
     'IO::All'            => '0.30',
     'Net::SFTP::Foreign' => '1.77',
+    'Scalar::Util'       => 0,
+    'URI'                => 0,
+    'namespace::clean'   => 0,
 );
 my %CONFIGURE_DEPS = (
     'ExtUtils::MakeMaker' => 0,
